@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&display=swap" rel="stylesheet">
+    <title>AI Fake News Detector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top, #d9e9ff, #f9fbff);
+            margin: 0;
+            padding: 0;
+            color: #111;
+        }
+
+        header {
+            background: #007bff;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 1.6rem;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            width: 60%;
+            padding: 10px 18px;
+            border: 2px solid #007bff;
+            border-radius: 50px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-box button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #0056b3;
+        }
+
+        /* Ripple animation */
+        #rings {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 200px;
+            height: 200px;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 100;
+        }
+
+        .ring {
+            position: absolute;
+            border: 5px solid rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            animation: wave 1.8s infinite ease-out;
+        }
+
+        .ring:nth-child(2) {
+            animation-delay: .3s;
+        }
+
+        .ring:nth-child(3) {
+            animation-delay: .6s;
+        }
+
+        .ring:nth-child(4) {
+            animation-delay: .9s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(.3);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Compact news layout */
+        .news-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            gap: 10px;
+        }
+
+        .news-item img {
+            width: 80px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .news-item div {
+            flex: 1;
+        }
+
+        .news-item a {
+            text-decoration: none;
+            color: #111;
+            font-weight: 600;
+        }
+
+        .news-item a:hover {
+            color: #007bff;
+        }
+
+        /* Real/Fake bar */
+        .bar {
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #eee;
+            margin-top: 6px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #fff;
+            padding-right: 4px;
+            line-height: 10px;
+        }
+
+        .real {
+            background: linear-gradient(90deg, #28a745, #63e37a);
+        }
+
+        .fake {
+            background: linear-gradient(90deg, #dc3545, #ff5c5c);
+        }
+
+        #check-result {
+            display: none;
+            margin-bottom: 25px;
+            background: #f8f9ff;
+            border-left: 5px solid #007bff;
+        }
+
+        #check-result h2 {
+            border: none;
+        }
+
+        .orange {
+            color: #ffffff;
+            font-family: "BBH Sans Bogle", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            letter-spacing: 1px;
+        }
+
+        .result-text {
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            color: #555;
+            font-size: 0.9rem;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>🧠 AI Fake News Detector</header>
+    <header class="orange">SHIVAJI UNIVERSITY, KOLHAPUR</header>
+
+    <div class="container">
+        <div class="search-box">
+            <input id="newsInput" placeholder="Enter a headline to check..." />
+            <button id="checkBtn">Check</button>
+            <button id="fetchBtn">Fetch Latest News</button>
+        </div>
+
+        <!-- Ripple -->
+        <div id="rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+        </div>
+
+        <!-- Prediction Result -->
+        <section id="check-result">
+            <h2>🔍 Result</h2>
+            <p class="result-text" id="result-label"></p>
+            <div id="result-bar"></div>
+        </section>
+
+        <!-- News sections -->
+        <section id="indian">
+            <h2> Indian News</h2>
+            <div id="indian-list"></div>
+        </section>
+        <section id="top">
+            <h2>🏆 Top 10 News</h2>
+            <div id="top-list"></div>
+        </section>
+        <section id="global">
+            <h2>🌍 Global News</h2>
+            <div id="global-list"></div>
+        </section>
+        <section id="sports">
+            <h2>🏏 Sports News</h2>
+            <div id="sports-list"></div>
+        </section>
+    </div>
+
+    <footer>© 2025 AI Fake News Detector <br> SHIVAJI UNIVERSITY </footer>
+
+    <script>
+        const rings = document.getElementById('rings');
+        function showRings(show) { rings.style.display = show ? 'block' : 'none'; }
+
+        function makeBar(real, fake) {
+            if (!real && !fake) return '';
+            const isReal = real >= fake;
+            const width = isReal ? real : fake;
+            const cls = isReal ? 'real' : 'fake';
+            const text = (isReal ? 'Real ' : 'Fake ') + width + '%';
+            return `<div class="bar"><div class="bar-fill ${cls}" style="width:${width}%;">${text}</div></div>`;
+        }
+
+        function newsHTML(a) {
+            return `
+    <div class="news-item">
+      <img src="${a.urlToImage}" alt="">
+      <div>
+        <a href="${a.url}" target="_blank">${a.title}</a>
+        ${makeBar(a.real_prob, a.fake_prob)}
+      </div>
+    </div>`;
+        }
+
+        async function fetchAll() {
+            showRings(true);
+            const res = await fetch('/fetch_all');
+            const data = await res.json();
+            showRings(false);
+            if (data.error) { alert(data.error); return; }
+            document.getElementById('indian-list').innerHTML = data.indian.map(newsHTML).join('');
+            document.getElementById('top-list').innerHTML = data.top.map(newsHTML).join('');
+            document.getElementById('global-list').innerHTML = data.global.map(newsHTML).join('');
+            document.getElementById('sports-list').innerHTML = data.sports.map(newsHTML).join('');
+        }
+
+        async function checkNews() {
+            const text = document.getElementById('newsInput').value.trim();
+            if (!text) { alert('Please enter a headline.'); return; }
+            showRings(true);
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ news: text })
+            });
+            const data = await res.json();
+            showRings(false);
+
+            // Display result section
+            const resultSection = document.getElementById('check-result');
+            const label = document.getElementById('result-label');
+            const bar = document.getElementById('result-bar');
+            resultSection.style.display = 'block';
+            label.textContent = `Result: ${data.label} (Real: ${data.real_prob}% | Fake: ${data.fake_prob}%)`;
+            bar.innerHTML = makeBar(data.real_prob, data.fake_prob);
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.getElementById('fetchBtn').onclick = fetchAll;
+        document.getElementById('checkBtn').onclick = checkNews;
+        window.onload = fetchAll;
+    </script>
+</body>
+
+</html>
